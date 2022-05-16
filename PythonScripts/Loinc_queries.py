@@ -1,3 +1,4 @@
+from doctest import master
 from numpy import append
 from collections import Counter
 import pyodbc 
@@ -19,38 +20,33 @@ for lab in cursor:
 
 cursor.close()
 
-# For each labID in unique_lab_list
-# Create a dictionary for each lab that stores: loinc1, loinc1_count, loinc2, loinc2_count, loinc3_loinc3_count
-# Append dictionary to unique_lab_list
+# List of dictionaries that hold each lab's loinc information
+master_lab_list= []
+for lab in unique_lab_list:
+    labID = lab 
+    loinc_list = []
+    lab_dict = {}
+    lab_import_list = []
 
-#for lab in unique_lab_list:
+    lab_dict[f'LabID'] = f'{labID}'
 
-labID = '2'
-loinc_list = []
-lab2_dict = {}
+    cursor = conn.cursor()
+    cursor.execute(f'SELECT LoincID FROM LoincTransactions WHERE CAST(TransDate as DATE) = CAST(GETDATE() as DATE) AND LabID = {labID}')
 
-cursor = conn.cursor()
-cursor.execute(f'SELECT LoincID FROM LoincTransactions WHERE CAST(TransDate as DATE) = CAST(GETDATE() as DATE) AND LabID = {labID}')
+    for value in cursor:
+        loinc_list.append(value[0])
 
-""" for value in cursor:
-    if value[0] not in loinc_list:
-        loinc_list.append(value[0]) """
+    loinc_count = Counter(loinc_list).items()
 
-for value in cursor:
-    loinc_list.append(value[0])
+    counter = 1
+    for loinc in loinc_count:
+        lab_dict[f'loinc{counter}'] = f'{loinc[0]}'
+        lab_dict[f'loinc{counter}_count'] = f'{loinc[1]}'
 
-loinc_count = Counter(loinc_list).items()
+        counter += 1
 
-counter = 1
-for loinc in loinc_count:
-    loinc_number = lab2_dict[f'loinc{counter}'] = f'{loinc[0]}'
-    loinc_count = lab2_dict[f'loinc{counter}_count'] = f'{loinc[1]}'
+    cursor.close()
+    print(lab_dict)
 
-    print(loinc_number)
-    print(loinc_count)
-
-    counter += 1
-
-print(lab2_dict)
-
-cursor.close()
+for dict in master_lab_list:
+    print(dict)   
