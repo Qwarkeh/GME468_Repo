@@ -1,3 +1,5 @@
+from numpy import append
+from collections import Counter
 import pyodbc 
 
 # DB Connection
@@ -15,7 +17,40 @@ for lab in cursor:
     if lab[0] not in unique_lab_list:
         unique_lab_list.append(lab[0])
 
-for lab in unique_lab_list:
-    print(lab)
+cursor.close()
+
+# For each labID in unique_lab_list
+# Create a dictionary for each lab that stores: loinc1, loinc1_count, loinc2, loinc2_count, loinc3_loinc3_count
+# Append dictionary to unique_lab_list
+
+#for lab in unique_lab_list:
+
+labID = '2'
+loinc_list = []
+lab2_dict = {}
+
+cursor = conn.cursor()
+cursor.execute(f'SELECT LoincID FROM LoincTransactions WHERE CAST(TransDate as DATE) = CAST(GETDATE() as DATE) AND LabID = {labID}')
+
+""" for value in cursor:
+    if value[0] not in loinc_list:
+        loinc_list.append(value[0]) """
+
+for value in cursor:
+    loinc_list.append(value[0])
+
+loinc_count = Counter(loinc_list).items()
+
+counter = 1
+for loinc in loinc_count:
+    loinc_number = lab2_dict[f'loinc{counter}'] = f'{loinc[0]}'
+    loinc_count = lab2_dict[f'loinc{counter}_count'] = f'{loinc[1]}'
+
+    print(loinc_number)
+    print(loinc_count)
+
+    counter += 1
+
+print(lab2_dict)
 
 cursor.close()
