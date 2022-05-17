@@ -1,6 +1,3 @@
-from doctest import master
-from numpy import append
-from collections import Counter
 import pyodbc 
 
 # DB Connection
@@ -20,33 +17,19 @@ for lab in cursor:
 
 cursor.close()
 
-# List of dictionaries that hold each lab's loinc information
-master_lab_list= []
+# Populate a list with Lab number and a list of tuples containing loinc number and loinc count
+lab_info_list = []
 for lab in unique_lab_list:
-    labID = lab 
-    loinc_list = []
-    lab_dict = {}
-    lab_import_list = []
-
-    lab_dict[f'LabID'] = f'{labID}'
+    lab = lab 
+    lab_info_temp= []
 
     cursor = conn.cursor()
-    cursor.execute(f'SELECT LoincID FROM LoincTransactions WHERE CAST(TransDate as DATE) = CAST(GETDATE() as DATE) AND LabID = {labID}')
+    cursor.execute(f'SELECT TOP 3 LoincID, COUNT(*) as LoincCount FROM LoincTransactions WHERE CAST(TransDate as DATE) = CAST(GETDATE() as DATE) AND LabID = {lab} GROUP BY LoincID ORDER BY LoincCount DESC')
 
-    for value in cursor:
-        loinc_list.append(value[0])
+    loinc_count = cursor.fetchall()
 
-    loinc_count = Counter(loinc_list).items()
-
-    counter = 1
-    for loinc in loinc_count:
-        lab_dict[f'loinc{counter}'] = f'{loinc[0]}'
-        lab_dict[f'loinc{counter}_count'] = f'{loinc[1]}'
-
-        counter += 1
+    lab_info_temp.append(lab)
+    lab_info_temp.append(loinc_count)
+    lab_info_list.append(lab_info_temp)
 
     cursor.close()
-    print(lab_dict)
-
-for dict in master_lab_list:
-    print(dict)   
