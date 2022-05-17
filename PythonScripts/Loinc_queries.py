@@ -33,3 +33,19 @@ for lab in unique_lab_list:
     lab_info_list.append(lab_info_temp)
 
     cursor.close()
+
+# County loinc Count
+county_list = ['Multnomah', 'Washington', 'Clackamas']
+county_count_list = []
+for county in county_list:
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT TOP 3 LoincID, COUNT(*) AS LoincCount FROM LoincTransactions LEFT JOIN Laboratories ON LoincTransactions.LabID = Laboratories.LabID WHERE Laboratories.County = '{county}' GROUP BY LoincID ORDER BY LoincCount DESC")
+
+    county_count = cursor.fetchall()
+
+    county_temp = []
+    county_temp.append(county)
+    county_temp.append(county_count)
+    county_count_list.append(county_temp)
+
+    cursor.close()
