@@ -1,4 +1,5 @@
-import pyodbc 
+import pyodbc
+import arcpy 
 
 # DB Connection
 conn = pyodbc.connect('Driver={SQL Server};'
@@ -49,3 +50,28 @@ for county in county_list:
     county_count_list.append(county_temp)
 
     cursor.close()
+
+# Update Pilot_Labs FC
+fields = ['Loinc1', 'Loinc1Count', 'Loinc2', 'Loinc2Count', 'Loinc3', 'Loinc3Count', 'LabID']
+fc = 'C:\Spring_2022\GME_468\ArcPro_Portion\OregonDiseasesMap_StarkC\OregonDiseases_StarkC.gdb\Pilot_Labs'
+
+with arcpy.da.UpdateCursor(fc, fields, sql_clause = (None, 'ORDER BY LabID')) as cursor:
+    for row in cursor:
+        for lab in lab_info_list:
+            labID = lab[0]
+
+            if labID == row[6]:
+                print(f'Updating Lab {lab[0]}')
+                #Loinc 1
+                row[0] = lab[1][0][0] 
+                row[1] = lab[1][0][1]
+                #Loinc 2
+                row[2] = lab[1][1][0]
+                row[3] = lab[1][1][1]
+                #loinc 3
+                row[4] = lab[1][2][0]
+                row[5] = lab[1][2][1]
+                cursor.updateRow(row)
+            else:
+                continue
+del cursor, row
