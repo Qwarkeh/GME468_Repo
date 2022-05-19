@@ -35,22 +35,6 @@ for lab in unique_lab_list:
 
     cursor.close()
 
-# County loinc Count
-county_list = ['Multnomah', 'Washington', 'Clackamas']
-county_count_list = []
-for county in county_list:
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT TOP 3 LoincID, COUNT(*) AS LoincCount FROM LoincTransactions LEFT JOIN Laboratories ON LoincTransactions.LabID = Laboratories.LabID WHERE Laboratories.County = '{county}' GROUP BY LoincID ORDER BY LoincCount DESC")
-
-    county_count = cursor.fetchall()
-
-    county_temp = []
-    county_temp.append(county)
-    county_temp.append(county_count)
-    county_count_list.append(county_temp)
-
-    cursor.close()
-
 # Update Pilot_Labs FC
 fields = ['Loinc1', 'Loinc1Count', 'Loinc2', 'Loinc2Count', 'Loinc3', 'Loinc3Count', 'LabID']
 fc = 'C:\Spring_2022\GME_468\ArcPro_Portion\OregonDiseasesMap_StarkC\OregonDiseases_StarkC.gdb\Pilot_Labs'
@@ -71,6 +55,50 @@ with arcpy.da.UpdateCursor(fc, fields, sql_clause = (None, 'ORDER BY LabID')) as
                 #loinc 3
                 row[4] = lab[1][2][0]
                 row[5] = lab[1][2][1]
+                cursor.updateRow(row)
+            else:
+                continue
+del cursor, row
+
+# County loinc Count DB Query and list creation
+county_list = ['Multnomah', 'Washington', 'Clackamas']
+county_count_list = []
+for county in county_list:
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT TOP 3 LoincID, COUNT(*) AS LoincCount FROM LoincTransactions LEFT JOIN Laboratories ON LoincTransactions.LabID = Laboratories.LabID WHERE Laboratories.County = '{county}' GROUP BY LoincID ORDER BY LoincCount DESC")
+
+    county_count = cursor.fetchall()
+
+    county_temp = []
+    county_temp.append(county)
+    county_temp.append(county_count)
+    county_count_list.append(county_temp)
+
+    cursor.close()
+
+for county in county_count_list:
+    print(county)
+
+# County Update Cursor for PortlandMetro_Counties_WM FC
+fields = ['Loinc1', 'Loinc1Count', 'Loinc2', 'Loinc2Count', 'Loinc3', 'Loinc3Count', 'altName']
+fc = 'C:\Spring_2022\GME_468\ArcPro_Portion\OregonDiseasesMap_StarkC\OregonDiseases_StarkC.gdb\PortlandMetro_Counties_WM'
+
+with arcpy.da.UpdateCursor(fc, fields, sql_clause = (None, 'ORDER BY altName')) as cursor:
+    for row in cursor:
+        for county in county_count_list:
+            county_name = county[0]
+
+            if county_name == row[6]:
+                print(f'Updating {county[0]} County')
+                #Loinc 1
+                row[0] = county[1][0][0] 
+                row[1] = county[1][0][1]
+                #Loinc 2
+                row[2] = county[1][1][0]
+                row[3] = county[1][1][1]
+                #loinc 3
+                row[4] = county[1][2][0]
+                row[5] = county[1][2][1]
                 cursor.updateRow(row)
             else:
                 continue
