@@ -1,4 +1,7 @@
 USE GME468
+
+DROP TABLE LoincTransactions
+
 CREATE TABLE LoincTransactions (
 TransID int IDENTITY (1,1) NOT NULL PRIMARY KEY,
 TransDate DATETIME NOT NULL,
